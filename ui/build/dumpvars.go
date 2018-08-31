@@ -132,7 +132,6 @@ var BannerVars = []string{
 	"AUX_OS_VARIANT_LIST",
 	"TARGET_BUILD_PDK",
 	"PDK_FUSION_PLATFORM_ZIP",
-	"PRODUCT_SOONG_NAMESPACES",
 }
 
 func Banner(make_vars map[string]string) string {
