@@ -79,6 +79,7 @@ var Configuration = map[string]PathConfig{
 	"bison":    Log,
 	"bzip2":    Allowed,
 	"cpio":     Allowed,
+	"ccache":   Allowed,
 	"date":     Allowed,
 	"dd":       Allowed,
 	"diff":     Allowed,
