@@ -942,9 +942,7 @@ func (j *Module) collectBuilderFlags(ctx android.ModuleContext, deps deps) javaB
 	return flags
 }
 
-func (j *Module) compile(ctx android.ModuleContext, aaptSrcJar android.Path) {
-
-	hasSrcs := false
+func (j *Module) compile(ctx android.ModuleContext, extraSrcJars ...android.Path) {
 
 	j.exportAidlIncludeDirs = android.PathsForModuleSrc(ctx, j.deviceProperties.Aidl.Export_include_dirs)
 
@@ -960,15 +958,10 @@ func (j *Module) compile(ctx android.ModuleContext, aaptSrcJar android.Path) {
 	}
 
 	srcFiles = j.genSources(ctx, srcFiles, flags)
-	if len(srcFiles) > 0 {
-		hasSrcs = true
-	}
 
 	srcJars := srcFiles.FilterByExt(".srcjar")
 	srcJars = append(srcJars, deps.srcJars...)
-	if aaptSrcJar != nil {
-		srcJars = append(srcJars, aaptSrcJar)
-	}
+	srcJars = append(srcJars, extraSrcJars...)
 
 	// Collect source files from compiledJavaSrcs, compiledSrcJars and filter out Exclude_srcs
 	// that IDEInfo struct will use
@@ -1146,10 +1139,7 @@ func (j *Module) compile(ctx android.ModuleContext, aaptSrcJar android.Path) {
 		j.resourceJar = combinedJar
 	}
 
-	if len(deps.staticJars) > 0 {
-		jars = append(jars, deps.staticJars...)
-		hasSrcs = true
-	}
+	jars = append(jars, deps.staticJars...)
 
 	manifest := j.overrideManifest
 	if !manifest.Valid() && j.properties.Manifest != nil {
@@ -1260,8 +1250,7 @@ func (j *Module) compile(ctx android.ModuleContext, aaptSrcJar android.Path) {
 
 	j.implementationAndResourcesJar = implementationAndResourcesJar
 
-	if ctx.Device() && hasSrcs &&
-		(Bool(j.properties.Installable) || Bool(j.deviceProperties.Compile_dex)) {
+	if ctx.Device() && (Bool(j.properties.Installable) || Bool(j.deviceProperties.Compile_dex)) {
 		// Dex compilation
 		var dexOutputFile android.ModuleOutPath
 		dexOutputFile = j.compileDex(ctx, flags, outputFile, jarName)
@@ -1490,7 +1479,7 @@ func (j *Library) GenerateAndroidBuildActions(ctx android.ModuleContext) {
 	j.dexpreopter.isInstallable = Bool(j.properties.Installable)
 	j.dexpreopter.uncompressedDex = shouldUncompressDex(ctx, &j.dexpreopter)
 	j.deviceProperties.UncompressDex = j.dexpreopter.uncompressedDex
-	j.compile(ctx, nil)
+	j.compile(ctx)
 
 	if (Bool(j.properties.Installable) || ctx.Host()) && !android.DirectlyInAnyApex(ctx, ctx.ModuleName()) {
 		j.installFile = ctx.InstallFile(android.PathForModuleInstall(ctx, "framework"),
